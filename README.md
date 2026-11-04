@@ -18,4 +18,5 @@ Services and prices live in a relational database, totals are computed
 in SQL. No hallucinated prices, every number is traceable.
 
 ## Status
-Work in progress: database schema.
+Work in progress: database schema and seed data done.
+Next: LLM extraction with structured output (Pydantic).
