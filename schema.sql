@@ -28,7 +28,7 @@ CREATE TABLE offers (
     id           SERIAL PRIMARY KEY,
     customer_id  INTEGER NOT NULL REFERENCES customers(id),
     created_at   TIMESTAMP NOT NULL DEFAULT now(),
-    status       TEXT NOT NULL DEFAULT 'draft'
+    status       TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'accepted', 'rejected'))
 );
 
 -- The line items of an offer
