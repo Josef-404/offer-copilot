@@ -18,6 +18,7 @@
 | Creator recorded per offer | `schema.sql` — `offers.created_by` | Non-repudiation | — |
 | Least-privilege database role | `roles.sql` — `offer_copilot_app` may only `SELECT`, `INSERT`, `UPDATE` | Integrity, limits damage of SQL injection | `DELETE`, `DROP TABLE` and `CREATE TABLE` are denied |
 | Secrets kept out of the repo | `.gitignore` (`.env`), `.env.example` without real values | Confidentiality | Git history contains no secrets |
+| Push protection for secrets | GitHub — push protection enabled on my account (blocks pushes containing known secret formats) | Confidentiality | — |
 | Database backup with tested restore | `pg_dump -Fc` / `pg_restore` (see §8) | Availability | Restore into a fresh database succeeded |
 
 ## 1. System overview
