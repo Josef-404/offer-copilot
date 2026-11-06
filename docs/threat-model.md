@@ -1,8 +1,8 @@
 # Threat Model — Offer Copilot
 
 > Content based on my own answers, wording edited with AI assistance (Claude).
-> Some of the implemented measures (`roles.sql`, `.gitignore`, `.env.example`) were drafted with AI
-> assistance and reviewed and tested by me.
+> Some of the implemented measures (`roles.sql`, `.gitignore`, `.env.example`, `users`/`companies` tables)
+> were drafted with AI assistance and reviewed and tested by me.
 
 ## Implemented security measures
 
@@ -12,6 +12,10 @@
 | Size limit for discovery notes | `schema.sql` — `CHECK (char_length(notes) <= 20000)` | Availability, LLM costs | Insert with 20,001 characters is rejected |
 | Value checks and required fields | `schema.sql` — `CHECK`, `NOT NULL`, foreign keys | Integrity | — |
 | Price snapshot per offer item | `schema.sql` — `offer_items.unit_price` | Integrity of sent offers | — |
+| Role-based access control (data model) | `schema.sql` — `users.role` with `CHECK (role IN ('admin', 'editor', 'viewer'))`, default `viewer` | Authorization | Insert with `role = 'superadmin'` is rejected |
+| Tenant model | `schema.sql` — `companies` table, `company_id` on `users`, `customers`, `services` | Confidentiality between companies | — |
+| One account per email | `schema.sql` — `users.email UNIQUE` | Authenticity | Duplicate email is rejected |
+| Creator recorded per offer | `schema.sql` — `offers.created_by` | Non-repudiation | — |
 | Least-privilege database role | `roles.sql` — `offer_copilot_app` may only `SELECT`, `INSERT`, `UPDATE` | Integrity, limits damage of SQL injection | `DELETE`, `DROP TABLE` and `CREATE TABLE` are denied |
 | Secrets kept out of the repo | `.gitignore` (`.env`), `.env.example` without real values | Confidentiality | Git history contains no secrets |
 | Database backup with tested restore | `pg_dump -Fc` / `pg_restore` (see §8) | Availability | Restore into a fresh database succeeded |
@@ -34,7 +38,7 @@ selects matching services, and the offer is calculated from the database.
 | Discovery notes | Confidential information about customers and their projects |
 | Services and prices | Must not be manipulated — wrong prices mean wrong offers (integrity) |
 | Offers | Business data of the user and their customers |
-| User accounts and passwords | *Planned* — no `users` table yet; passwords will only be stored hashed |
+| User accounts and passwords | `users` table exists; passwords are only stored as Argon2id hash (login itself is planned) |
 | Secrets | Database password and LLM API key |
 
 ## 3. Security goals
@@ -50,7 +54,7 @@ selects matching services, and the offer is calculated from the database.
 <!-- Where can data or requests enter the system? (forms, API endpoints, LLM responses, DB access) -->
 
 ## 5. Authentication
-**Status:** ⏳ planned — no login and no `users` table yet.
+**Status:** `users` table with `password_hash` ✅ · login flow ⏳ planned.
 
 **Common methods:** password + secure hashing · 2FA / MFA (TOTP app, security key; SMS is the
 weakest option because of SIM swapping) · passkeys (WebAuthn) · login via an identity provider
@@ -73,7 +77,7 @@ After login, the user session is kept in a cookie with `HttpOnly`, `Secure` and 
   signature, issuer (`iss`), audience (`aud`) and expiry (`exp`) before creating a session.
 
 ## 6. Authorization
-**Status:** ⏳ planned — depends on the planned user accounts (see 5).
+**Status:** data model ✅ in `schema.sql` · enforcement in the app ⏳ planned.
 
 **Common models:** RBAC (rights attached to roles) · ABAC (rules over attributes of user, object
 and context) · ReBAC (rights derived from relationships, e.g. team membership) · ACLs (per-object
@@ -87,9 +91,11 @@ lists of who may do what). OAuth 2.0 covers authorization *between* apps, not in
 | **editor** | create and edit customers, discovery notes and offers |
 | **viewer** | read customers, discovery notes and offers |
 
-- **Tenant isolation:** users only ever see data of **their own company**. Every query is filtered by
-  the user's company — changing `/offers/12` to `/offers/13` must not reveal another company's offer
-  (broken access control). *Requires a `companies` table and `company_id` columns — not in the schema yet.*
+- **Roles in the database:** `users.role` with `CHECK (role IN ('admin', 'editor', 'viewer'))`, default
+  `viewer` (least privilege). ✅
+- **Tenant isolation:** users only ever see data of **their own company**. `users`, `customers` and
+  `services` carry a `company_id` ✅; every query will be filtered by the user's company ⏳ — changing
+  `/offers/12` to `/offers/13` must not reveal another company's offer (broken access control).
 - **Central decision point:** one access check in the backend that every request passes through —
   never only in the frontend (hiding a button is not access control).
 - **Deny by default:** anything not explicitly allowed for a role is forbidden.
