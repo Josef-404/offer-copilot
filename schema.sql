@@ -20,7 +20,8 @@ CREATE TABLE discovery_notes (
     id           SERIAL PRIMARY KEY,
     customer_id  INTEGER NOT NULL REFERENCES customers(id),
     call_date    DATE NOT NULL,
-    notes        TEXT NOT NULL
+    -- Security: limit size to protect DB and LLM costs (availability)
+    notes        TEXT NOT NULL CHECK (char_length(notes) <= 20000)
 );
 
 -- One offer for one customer
@@ -28,6 +29,7 @@ CREATE TABLE offers (
     id           SERIAL PRIMARY KEY,
     customer_id  INTEGER NOT NULL REFERENCES customers(id),
     created_at   TIMESTAMP NOT NULL DEFAULT now(),
+    -- Security: allowlist of valid states (input validation at DB level)
     status       TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'accepted', 'rejected'))
 );
 
