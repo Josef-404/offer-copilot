@@ -79,7 +79,7 @@ erDiagram
 
 | Index | Column | Status |
 |---|---|---|
-| Primary key index | `id` in every table | ✅ created automatically by PostgreSQL |
-| Foreign key index | `offers.customer_id` | ⏳ planned (list offers per customer) |
-| Foreign key index | `offer_items.offer_id` | ⏳ planned (load items of an offer) |
-| Foreign key index | `discovery_notes.customer_id` | ⏳ planned (notes per customer) |
+| Primary key index | `id` in every table | created automatically by PostgreSQL |
+| Foreign key index | `offers.customer_id` | planned (list offers per customer) |
+| Foreign key index | `offer_items.offer_id` | planned (load items of an offer) |
+| Foreign key index | `discovery_notes.customer_id` | planned (notes per customer) |
