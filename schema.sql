@@ -64,3 +64,10 @@ CREATE TABLE offer_items (
     quantity    NUMERIC(10,2) NOT NULL CHECK (quantity > 0),
     unit_price  NUMERIC(10,2) NOT NULL   -- price copied at the moment of the offer
 );
+
+-- Indexes on foreign keys that the app filters or joins by.
+-- PostgreSQL indexes primary keys and UNIQUE columns automatically, but not foreign keys.
+CREATE INDEX idx_services_company_id ON services (company_id);          -- load services of one company
+CREATE INDEX idx_offers_customer_id ON offers (customer_id);             -- list offers per customer
+CREATE INDEX idx_offer_items_offer_id ON offer_items (offer_id);         -- load items of an offer, offer total
+CREATE INDEX idx_discovery_notes_customer_id ON discovery_notes (customer_id);  -- notes per customer

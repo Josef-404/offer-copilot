@@ -24,27 +24,62 @@ Offer Copilot manages customers, services, offers and offer items. That is data 
 ## Repository structure
 | File | Content |
 |---|---|
-| `schema.sql` | Tables, keys and `CHECK` constraints |
+| `schema.sql` | Tables, keys, `CHECK` constraints and indexes |
 | `roles.sql` | Least-privilege database role for the app |
-| `seed.sql` | Test data: one company, two services, two example customers |
+| `seed.sql` | Test data: one company, eight services, two example customers, one test user |
+| `db.py` | Data layer: all SQL queries, parameterized; offers saved in one transaction |
+| `models.py` | Data models (`Service`, `Candidate`) |
+| `knapsack.py` | Optimizer: best combination of services within the budget (SE_14) |
+| `main.py` | Command-line app: one command per use case (see Run) |
+| `requirements.txt` | Python dependencies (pinned) |
 | `.env.example` | Template for secrets — copy to `.env`, which is git-ignored |
-| [`docs/er-model.md`](docs/er-model.md) | ER diagram of the database |
+| [`docs/database.md`](docs/database.md) | Use cases, design decisions, consistency, transactions, data |
+| [`docs/er-model.md`](docs/er-model.md) | ER diagram with cardinalities, keys and indexes |
 | [`docs/threat-model.md`](docs/threat-model.md) | Threat model and list of implemented security measures |
 
 ## Setup
-Requires PostgreSQL.
+Requires PostgreSQL and Python 3.12+.
 ```bash
+# 1. Database
 createdb offer_copilot
 psql -d offer_copilot -f schema.sql
 psql -d offer_copilot -f roles.sql
 psql -d offer_copilot -f seed.sql
-cp .env.example .env    # then fill in real values
+
+# 2. Python environment
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# 3. Connection settings (DATABASE_URL), then fill in real values
+cp .env.example .env
 ```
+
+## Run
+```bash
+export $(grep -v '^#' .env | xargs)
+.venv/bin/python main.py services                      # services and prices
+.venv/bin/python main.py customers                     # customers
+.venv/bin/python main.py add-note 1 2026-11-20 "Wants an AI setup and a workshop"
+.venv/bin/python main.py create-offer 1 --budget 5000 \
+    --want "AI setup=10" --want "Workshop=5" --want "Custom integration=8"
+.venv/bin/python main.py offers 1                      # offers of customer 1 with totals
+.venv/bin/python main.py show-offer 1                  # items of offer 1
+.venv/bin/python main.py set-status 1 sent
+.venv/bin/python main.py compare --budget 5000 --want "AI setup=10" --want "Workshop=5"
+```
+`create-offer` chooses the best combination of the wanted services within the budget
+(knapsack, `--want "Service=priority"`), saves the offer with all items in one transaction
+and prints the total calculated in SQL. All use cases: [`docs/database.md`](docs/database.md).
+
+## Ownership
+Solo project by Josef Rabl. AI assistance (Claude) is disclosed at the top of each document and file
+where it was used. The knapsack algorithms in `knapsack.py` are written by me without AI.
 
 ## Security
 See [`docs/threat-model.md`](docs/threat-model.md): system overview, assets, entry points,
 threats and mitigations, open risks, and the table of implemented security measures.
 
 ## Status
-Work in progress: database schema, seed data, least-privilege role and threat model done.
-Next: web app with login and access control, then LLM extraction with structured output (Pydantic).
+Work in progress. Done: database schema with indexes, data layer with transactions, demo of the
+main use case, least-privilege role, threat model. Next: web app with login and access control,
+then LLM extraction with structured output (Pydantic).

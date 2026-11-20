@@ -80,6 +80,12 @@ erDiagram
 | Index | Column | Status |
 |---|---|---|
 | Primary key index | `id` in every table | created automatically by PostgreSQL |
-| Foreign key index | `offers.customer_id` | planned (list offers per customer) |
-| Foreign key index | `offer_items.offer_id` | planned (load items of an offer) |
-| Foreign key index | `discovery_notes.customer_id` | planned (notes per customer) |
+| Unique index | `users.email` | created automatically by `UNIQUE` |
+| `idx_services_company_id` | `services.company_id` | implemented (load the services of one company) |
+| `idx_offers_customer_id` | `offers.customer_id` | implemented (list offers per customer) |
+| `idx_offer_items_offer_id` | `offer_items.offer_id` | implemented (load items of an offer, offer total) |
+| `idx_discovery_notes_customer_id` | `discovery_notes.customer_id` | implemented (notes per customer) |
+
+PostgreSQL creates indexes for primary keys and `UNIQUE` columns automatically, but **not for foreign keys**.
+The four indexes above cover the columns the app filters and joins by. With the small test data set
+the planner may still choose a sequential scan; the indexes matter once there are thousands of rows.
