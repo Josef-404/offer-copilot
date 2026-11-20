@@ -63,9 +63,15 @@ schema adds indexes on the foreign keys the app filters and joins by (`services.
 [`er-model.md`](er-model.md#indexes).
 
 ## Data
-- **Amount now:** test data from `seed.sql`. 1 company, 8 services, 2 customers, 1 user.
-  Offers, offer items and discovery notes are created through the app (`create-offer`, `add-note`).
-- **How generated:** written by hand to match a realistic offer for a small AI agency.
-  No real customer data is stored.
+- **Amount now:** 1 company, 3 users (one per role), 50 customers, 8 services, 50 discovery notes,
+  500 offers, about 1,460 offer items. More offers and notes are added through the app (`create-offer`, `add-note`).
+- **How generated:**
+  - `seed.sql`: written by hand (company, services with realistic prices, 2 example customers, test user).
+  - `seed_generated.sql`: generated in SQL with `generate_series` and `random()`; the script was written
+    with AI assistance (Claude). `setseed` makes it reproducible. Offers are spread over customers,
+    users, statuses and 2026; every offer has 1–8 items, prices are copied from `services`.
+  - All names are fictional. No real customer data is stored.
+- **Effect on indexes:** with 500 offers PostgreSQL uses `idx_offers_customer_id` for
+  `WHERE customer_id = …` (`EXPLAIN` shows a bitmap index scan instead of a sequential scan).
 - **Expected in production:** about 100 customers with roughly 50 offers each, so about 5,000
   offers and 25,000 offer items over the agency's lifetime. Small for PostgreSQL.

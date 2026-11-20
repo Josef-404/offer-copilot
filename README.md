@@ -26,9 +26,10 @@ Offer Copilot manages customers, services, offers and offer items. That is data 
 |---|---|
 | `schema.sql` | Tables, keys, `CHECK` constraints and indexes |
 | `roles.sql` | Least-privilege database role for the app |
-| `seed.sql` | Test data: one company, eight services, two example customers, one test user |
+| `seed.sql` | Hand-written test data: one company, eight services, two example customers, one test user |
+| `seed_generated.sql` | Generated test data (AI-assisted script): 48 more customers, 500 offers, ~1,460 items |
 | `db.py` | Data layer: all SQL queries, parameterized; offers saved in one transaction |
-| `models.py` | Data models (`Service`, `Candidate`) |
+| `models.py` | Data models (`Service`, `Candidate`, `Customer`, `OfferSummary`, `OfferItem`) |
 | `knapsack.py` | Optimizer: best combination of services within the budget (SE_14) |
 | `main.py` | Command-line app: one command per use case (see Run) |
 | `requirements.txt` | Python dependencies (pinned) |
@@ -45,6 +46,7 @@ createdb offer_copilot
 psql -d offer_copilot -f schema.sql
 psql -d offer_copilot -f roles.sql
 psql -d offer_copilot -f seed.sql
+psql -d offer_copilot -f seed_generated.sql   # optional: realistic data volume
 
 # 2. Python environment
 python3 -m venv .venv
