@@ -37,11 +37,3 @@ def brute_force(candidates: list[Candidate], budget: Decimal) -> list[bool]:
             best_value = score
             best_selection = list(selection)
     return best_selection
-
-def hill_climbing(candidates: list[Candidate], budget: Decimal, start: list[bool]) -> list[bool]:
-    """From `start`, keep moving to the best neighbor (flip one bit) until no neighbor is better."""
-    
-
-def repeated_hill_climbing(candidates: list[Candidate], budget: Decimal, restarts: int) -> list[bool]:
-    """Run hill_climbing from `restarts` random starting points and return the best result."""
-    

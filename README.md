@@ -67,7 +67,6 @@ export $(grep -v '^#' .env | xargs)
 .venv/bin/python main.py offers 1                      # offers of customer 1 with totals
 .venv/bin/python main.py show-offer 1                  # items of offer 1
 .venv/bin/python main.py set-status 1 sent
-.venv/bin/python main.py compare --budget 5000 --want "AI setup=10" --want "Workshop=5"
 ```
 `create-offer` chooses the best combination of the wanted services within the budget
 (knapsack, `--want "Service=priority"`), saves the offer with all items in one transaction

@@ -8,25 +8,22 @@ Usage (after `export $(grep -v '^#' .env | xargs)`):
     .venv/bin/python main.py offers 1
     .venv/bin/python main.py show-offer 1
     .venv/bin/python main.py set-status 1 sent
-    .venv/bin/python main.py compare --budget 5000 --want "AI setup=10" --want "Workshop=5"
 
 There is no login yet, so the app works for company 1 and the seeded test user.
 """
 
 import argparse
-import time
 from datetime import date
 from decimal import Decimal
 
 import psycopg
 
 import db
-from knapsack import brute_force, repeated_hill_climbing, util
+from knapsack import brute_force, util
 from models import Candidate, Service
 
 COMPANY_ID: int = 1
 CURRENT_USER_EMAIL: str = "test@example.com"
-HILL_CLIMBING_RESTARTS: int = 10
 
 
 def parse_wants(wants: list[str]) -> dict[str, int]:
@@ -94,21 +91,6 @@ def set_status(connection: psycopg.Connection, offer_id: int, status: str) -> No
     print(f"Offer #{offer_id} is now {status}")
 
 
-def compare(connection: psycopg.Connection, budget: Decimal, wants: list[str]) -> None:
-    """SE_14: compare the exact brute force result with repeated hill climbing."""
-    candidates: list[Candidate] = build_candidates(db.load_services(connection, COMPANY_ID), parse_wants(wants))
-    print(f"{len(candidates)} services, budget {budget} EUR, {2 ** len(candidates)} combinations")
-    for label, run in (
-        ("Brute force", lambda: brute_force(candidates, budget)),
-        ("Hill climbing", lambda: repeated_hill_climbing(candidates, budget, HILL_CLIMBING_RESTARTS)),
-    ):
-        start: float = time.perf_counter()
-        selection: list[bool] = run()
-        milliseconds: float = (time.perf_counter() - start) * 1000
-        names: list[str] = [service.name for service in selected_services(candidates, selection)]
-        print(f"{label:<14} value {util(candidates, selection, budget):>3} in {milliseconds:8.2f} ms  {names}")
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Offer Copilot")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -125,10 +107,6 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("customer_id", type=int)
     create.add_argument("--budget", type=Decimal, required=True)
     create.add_argument("--want", action="append", required=True, help='"Service name=priority"')
-
-    comparison = commands.add_parser("compare", help="compare brute force and hill climbing (SE_14)")
-    comparison.add_argument("--budget", type=Decimal, required=True)
-    comparison.add_argument("--want", action="append", required=True, help='"Service name=priority"')
 
     offers = commands.add_parser("offers", help="list offers of a customer with totals")
     offers.add_argument("customer_id", type=int)
@@ -160,8 +138,6 @@ def main() -> None:
                 show_offer(connection, args.offer_id)
             case "set-status":
                 set_status(connection, args.offer_id, args.status)
-            case "compare":
-                compare(connection, args.budget, args.want)
 
 
 if __name__ == "__main__":
